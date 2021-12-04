@@ -1,0 +1,1 @@
+export type LayerStateType = "active" | "hover" | "tap" | "inactive" | "inactive_hover" | "custom";

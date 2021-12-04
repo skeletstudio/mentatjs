@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2016",
+    "sourceMap": true,
+    "outDir": "build",
+    "rootDir": "src",
+    "removeComments": true,
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitReturns": true,
+    // "strict": true,
+    "noUnusedLocals": true,
+    "noImplicitUseStrict": true
+  },
+  "exclude": [
+    "node_modules", "build", "lib"
+  ]
+}
