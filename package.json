@@ -1,7 +1,7 @@
 {
   "name": "mentatjs",
   "version": "1.0.0",
-  "description": "",
+  "description": "MVC JS Framework",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {

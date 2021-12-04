@@ -5,7 +5,6 @@ MentatJS is a javascript library for the creation of Single Page Applications.
 
 ### FEATURES:
 - No dependencies
-- No build steps
 - Module loading
 
 ### BUILDING BLOCKS
