@@ -1,0 +1,10 @@
+node_modules
+src
+tests
+.gitignore
+.git
+package-lock.json
+tsconfig.json
+webpack.config.js
+.idea
+*.map

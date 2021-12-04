@@ -2,6 +2,17 @@
   "name": "mentatjs",
   "version": "1.0.0",
   "description": "MVC JS Framework",
+  "author": {
+    "name": "ARaffy"
+  },
+  "homepage": "https://github.com/alexraffy/mentatjs",
+  "keywords": [
+    "MVC",
+    "Framework",
+    "SPA",
+    "single page application",
+    "DOM"
+  ],
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {
@@ -9,7 +20,6 @@
     "02-mentatjs-build": "tsc",
     "03-mentatjs-webpack": "webpack"
   },
-  "author": "Alexandre RAFFY",
   "license": "MIT",
   "devDependencies": {
     "webpack": "^5.47.0",
