@@ -2188,6 +2188,11 @@ export class View extends BaseClass {
                 this.subViews[i].detachItSelf();
             }
         }
+        if (this._div !== undefined) {
+            while (this._div.children.length > 0) {
+                this._div.removeChild(this._div.children[this._div.children.length - 1]);
+            }
+        }
         this.subViews = [];
     }
 

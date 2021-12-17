@@ -36,6 +36,9 @@ export class DOMPool<N> {
 
     getElement(tagUnique: string): N {
         let p = this.getPool(tagUnique);
+        if (p === undefined) {
+            p = this.addPool(tagUnique, tagUnique, 100);
+        }
         assert(p !== undefined, "DOMPool.getElement called with tag " + tagUnique + " which has no pool.");
 
         if (p.pool.length === 0) {

@@ -193,13 +193,15 @@ export function renderViewStyle(el: HTMLElement, style: ViewStyle | View) {
                 let shadowLine = "box-shadow: ";
                 shadowLine += shw.offsetX + "px ";
                 shadowLine += shw.offsetY + "px ";
-                if (shw.blur !== 0) {
+                //if (shw.blur !== 0) {
                     shadowLine += shw.blur + "px ";
-                }
-                if (shw.spread !== 0) {
+                //}
+                //if (shw.spread !== 0) {
                     shadowLine += shw.spread + "px ";
-                }
-                if (!isDefined(shw.color)) {
+                //}
+                if (typeof shw.color === "string") {
+                    shadowLine += shw.color;
+                } else if (!isDefined(shw.color)) {
                     shadowLine += "rgb(50,50,50)";
                 } else {
                     shadowLine += getColorFromValue(shw.color.value);

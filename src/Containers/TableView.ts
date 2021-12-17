@@ -925,9 +925,9 @@ export class TableView extends View implements TableViewDelegate {
 
                 this.keyValues["cachedBounds"] =  {
                     x: x,
-                    y: headerHeight + 1,
+                    y: headerHeight,
                     width: w,
-                    height: NUConvertToPixel(parentBounds.height).amount - headerHeight - 1,
+                    height: NUConvertToPixel(parentBounds.height).amount - headerHeight,
                     unit: "px",
                     position: "absolute"
                 };
@@ -1127,7 +1127,7 @@ export class TableView extends View implements TableViewDelegate {
         let x = 0,
             y = 0,
             cellStartX = 0,
-            cellStartY = 5;
+            cellStartY = 0;
         const nbCols = (this.delegate!.tableViewNumberOfColumns === undefined) ? this.tableViewNumberOfColumns(this) : this.delegate!.tableViewNumberOfColumns(this),
             nbRows = (this.delegate!.tableViewNumberOfRows === undefined) ? this.tableViewNumberOfRows(this) : this.delegate!.tableViewNumberOfRows(this);
 
