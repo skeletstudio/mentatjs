@@ -3,7 +3,7 @@ import {isDefined} from "../Utils/isDefined";
 
 
 export function instanceOfLocalizedString(object: any): object is LocalizedString {
-    return object.kind === "LocalizedString" && isDefined(object.add);
+    return object !== undefined && object.kind === "LocalizedString" && isDefined(object.add);
 }
 
 
