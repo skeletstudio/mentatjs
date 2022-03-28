@@ -231,6 +231,20 @@ export function renderViewStyle(el: HTMLElement, style: ViewStyle | View) {
         el.style.cursor = style.cursor;
     }
 
+    if (isDefined(style.outlineColor)) {
+        el.style.outlineColor = style.outlineColor;
+    }
+    if (isDefined(style.outlineStyle)) {
+        el.style.outlineStyle = style.outlineStyle;
+    }
+    if (isDefined(style.outlineWidth)) {
+        el.style.outlineWidth = style.outlineWidth;
+    }
+    if (isDefined(style.outlineOffset)) {
+        el.style.outlineOffset = style.outlineOffset;
+    }
+
+
     if (style.extraCss !== '') {
         cssText += style.extraCss;
     }

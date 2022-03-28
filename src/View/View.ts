@@ -245,6 +245,39 @@ export class View extends BaseClass {
         style.extraCss = value;
     }
 
+    get outlineColor() {
+        let style: ViewStyle = this.getDefaultStyle();
+        return style.outlineColor;
+    }
+    set outlineColor(value: string) {
+        let style: ViewStyle = this.getDefaultStyle();
+        style.outlineColor = value;
+    }
+    get outlineStyle() {
+        let style: ViewStyle = this.getDefaultStyle();
+        return style.outlineStyle;
+    }
+    set outlineStyle(value: string) {
+        let style: ViewStyle = this.getDefaultStyle();
+        style.outlineStyle = value;
+    }
+    get outlineWidth() {
+        let style: ViewStyle = this.getDefaultStyle();
+        return style.outlineWidth;
+    }
+    set outlineWidth(value: string) {
+        let style: ViewStyle = this.getDefaultStyle();
+        style.outlineWidth = value;
+    }
+    get outlineOffset() {
+        let style: ViewStyle = this.getDefaultStyle();
+        return style.outlineOffset;
+    }
+    set outlineOffset(value: string) {
+        let style: ViewStyle = this.getDefaultStyle();
+        style.outlineOffset = value;
+    }
+
 
     dragScroll: boolean = false;
     NO_RESIZE: boolean = false;
@@ -286,7 +319,29 @@ export class View extends BaseClass {
     viewWillLoad() {};
     viewDidLoad() {};
 
-    viewWasAttached() {};
+    viewWasAttached() {
+
+
+    };
+
+    enableFocusEvents() {
+        let focusEventHandler = (evt: FocusEvent) => {
+            evt.stopPropagation();
+            this.setPropertyValue(kViewProperties.focused, true);
+            this.processStyleAndRender("", []);
+        }
+        let blurEventHandler = (evt: Event) => {
+            evt.stopPropagation();
+            this.setPropertyValue(kViewProperties.focused, false);
+            this.processStyleAndRender("", []);
+        }
+        this.getDiv().addEventListener("focusin", focusEventHandler);
+        this.m_arrayEventHandlers.push({eventName: "focusin", func: focusEventHandler});
+        this.getDiv().addEventListener("focusout", blurEventHandler);
+        this.m_arrayEventHandlers.push({eventName: "focusout", func: blurEventHandler});
+    }
+
+
     viewWillBeDeattached() {};
     viewWasDetached() {
 
@@ -606,43 +661,90 @@ export class View extends BaseClass {
     }
 
 
-    private shouldProcessStyle(vs: ViewStyle): boolean {
+    private shouldProcessStyle(vs: ViewStyle): { shouldProceed: boolean, triggerChildren?: '*' | string[] } {
         if (isDefined(vs.id) && vs.id !== "self" && vs.id !== this.id) {
-            return false;
+            return { shouldProceed: false };
         }
         if (isDefined(vs.state) && vs.state !== "default" && vs.state !== this.currentState) {
-            return false;
+            return { shouldProceed: false };
         }
+        let triggerChildren: '*' | string[] = undefined;
 
         if (isDefined(vs.cond)) {
             let condition = true;
             for (let i = 0; i < vs.cond.length; i += 1) {
                 let c = vs.cond[i];
-                let prop: LayerProperty = this.properties.find((elem: LayerProperty) => { return elem.property_id === c.property;});
+                let prop: LayerProperty;
+                if (c.fieldTargetForProperty === undefined) {
+                    prop = this.properties.find((elem: LayerProperty) => {
+                        return elem.property_id === c.property;
+                    });
+                } else {
+                    if (typeof c.fieldTargetForProperty === "string") {
+                        let n = this.parentView.findViewNamed(c.fieldTargetForProperty);
+                        if (n !== undefined) {
+                            prop = n.properties.find((elem: LayerProperty) => {
+                                return elem.property_id === c.property;
+                            });
+                        }
+                    } else if (typeof c.fieldTargetForProperty === "number") {
+                        let ptr: View = this;
+                        for (let x = 0; x < c.fieldTargetForProperty; x++) {
+                            ptr = ptr.parentView;
+                        }
+                        if (ptr !== undefined) {
+                            prop = ptr.properties.find((elem: LayerProperty) => {
+                                return elem.property_id === c.property;
+                            });
+                        }
+
+                    }
+                }
                 if (!isDefined(prop)) {
-                    return false;
+                    return { shouldProceed: false };
                 }
                 let compareResult = compareProperty(prop.type, c.path, c.value, prop.value);
                 if (compareResult !== c.op) {
                     condition = false;
+                } else {
+                    if (c.triggerChildren !== undefined) {
+                        if (typeof c.triggerChildren === "string" && c.triggerChildren === '*') {
+                            triggerChildren = "*";
+                        } else  {
+                            if (triggerChildren === undefined) {
+                                triggerChildren = [];
+                            }
+                            (triggerChildren as string[]).push(...c.triggerChildren);
+                        }
+                    }
                 }
             }
             if (condition === false) {
-                return false;
+                return { shouldProceed: false };
             }
         }
 
 
-        return true;
+        return {shouldProceed: true, triggerChildren: triggerChildren };
     }
     private calcStyle(vs: ViewStyle): {target: string; style: ViewStyle}[] {
         let ret: {target: string, style: ViewStyle}[] = [];
 
-        if (!this.shouldProcessStyle(vs)) {
+        let should = this.shouldProcessStyle(vs);
+        if (should.shouldProceed === false) {
             return ret;
         }
 
         ret.push({target: this.id, style: vs});
+        if (should.triggerChildren !== undefined) {
+            if (typeof should.triggerChildren === "string" && should.triggerChildren === "*") {
+                ret.push({target: "*", style: undefined});
+            } else {
+                for (let i = 0; i < should.triggerChildren.length; i++) {
+                    ret.push({target: should.triggerChildren[i], style: undefined});
+                }
+            }
+        }
 
         if (isDefined(vs.children)) {
             for (let i = 0; i < vs.children.length; i += 1) {
@@ -714,10 +816,12 @@ export class View extends BaseClass {
         // flatten myStyles
         for (let i = 0; i < myStyles.length; i += 1) {
             let s = myStyles[i];
-            let keys = Object.keys(s);
-            for (let i = 0; i < keys.length; i += 1) {
-                if (isDefined(s[keys[i]])) {
-                    ret[keys[i]] = s[keys[i]];
+            if (s !== undefined) {
+                let keys = Object.keys(s);
+                for (let i = 0; i < keys.length; i += 1) {
+                    if (isDefined(s[keys[i]])) {
+                        ret[keys[i]] = s[keys[i]];
+                    }
                 }
             }
         }
@@ -1129,9 +1233,17 @@ export class View extends BaseClass {
         // now update the children
         for (let i = 0; i < ret.childrenTargets.length; i += 1) {
             let target = ret.childrenTargets[i].target;
-            let subView = this.findViewNamed(target);
-            if (isDefined(subView)) {
-                subView.processStyleAndRender(requestBy, ret.childrenTargets[i].styles);
+            if (target === "*") {
+                for (let x = 0; x < this.subViews.length; x++) {
+                    if (this.subViews[x] !== undefined) {
+                        this.subViews[x].processStyleAndRender("", ret.childrenTargets[i].styles);
+                    }
+                }
+            } else {
+                let subView = this.findViewNamed(target);
+                if (isDefined(subView)) {
+                    subView.processStyleAndRender(requestBy, ret.childrenTargets[i].styles);
+                }
             }
         }
 

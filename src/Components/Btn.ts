@@ -279,7 +279,7 @@ export class Btn extends Label {
                 if (Logging.enableLogging) {
                     console.log('+CLICK ' + this.viewRef.id);
                 }
-                e.preventDefault();
+                //e.preventDefault();
                 e.stopPropagation();
                 if (isDefined(this.viewRef)) {
                     this.viewRef._onClick();

@@ -6,4 +6,6 @@ export interface ViewStyleCondition {
     op: OpResult;
     path?: string;
     value: boolean | number | string;
+    fieldTargetForProperty?: string | number;
+    triggerChildren?: '*' | string[];
 }

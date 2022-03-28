@@ -30,6 +30,10 @@ export class ViewStyle {
     shadows?: Shadow[];
     visible?: boolean;
     textStyle?: PropertyTextStyle = undefined;
+    outlineColor?: string;
+    outlineStyle?: string;
+    outlineWidth?: string;
+    outlineOffset?: string;
 
     constructor() {
         this.textStyle = new PropertyTextStyle();

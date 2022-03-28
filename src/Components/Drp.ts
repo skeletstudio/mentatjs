@@ -108,6 +108,8 @@ export class Drp extends View {
         this.dd.style.whiteSpace = 'nowrap';
         this.dd.style.paddingLeft = '5px';
         this.dd.style.padding = "auto 0";
+        this.dd.style.borderStyle = "none";
+
 
 
     }
@@ -159,6 +161,8 @@ export class Drp extends View {
     }
 
     viewWasAttached() {
+        super.viewWasAttached();
+        this.enableFocusEvents();
         this.getDiv().appendChild(this.dd);
 
         this.dd.viewRef = this;
