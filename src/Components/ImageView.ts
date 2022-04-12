@@ -32,7 +32,9 @@ export class ImageView extends View {
             this.innerImg.uuimageRef = undefined;
             this.innerImg.ondragstart = undefined;
             this.innerImg.onclick = undefined;
-            this.innerImg.parentNode.removeChild(this.innerImg);
+            if (isDefined(this.innerImg.parentNode)) {
+                this.innerImg.parentNode.removeChild(this.innerImg);
+            }
             this.innerImg = undefined;
             this.imageURI = "";
         }
