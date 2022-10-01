@@ -57,7 +57,8 @@ export class Drp extends View {
                     fills: [new Fill(true, "gradient", "normal", "linear-gradient(rgba(61, 61, 61, 1.0), rgba(57, 57, 57, 1.0))")],
                     textStyle: setProps(new PropertyTextStyle(), {
                         color: new Fill(true, "color", "normal", "rgba(224, 224, 225, 1.0)"),
-                        size: px(10)
+                        size: px(10),
+                        fillLineHeight: true
                     } as PropertyTextStyle)
                 } as ViewStyle),
             {
@@ -66,7 +67,7 @@ export class Drp extends View {
                     color: new Fill(true, "color", "normal", "rgba(224, 224, 225, 1.0)"),
                     size: px(10),
                     textAlignment: "center",
-                    weightName: "FontAwesome5ProSolid",
+                    weightName: "FontAwesome5FreeSolid",
                     fillLineHeight: true
                 } as PropertyTextStyle)
             } as ViewStyle,

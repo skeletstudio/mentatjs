@@ -1,6 +1,8 @@
 import {View} from "../View/View";
 
 
+
+
 export class CollectionItem {
     obj?: any = undefined;
     isAddOption: boolean = false;

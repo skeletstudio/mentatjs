@@ -35,7 +35,7 @@ this.view.attach(collectionView);
 
 
 import {View} from "../View/View";
-import {DataSource} from "../Datasource/DataSource";
+import {DataSource, DataSourceBind} from "../Datasource/DS";
 import {CollectionViewDelegate} from "./CollectionViewDelegate";
 import {CollectionItem} from "./CollectionItem";
 import {Color} from "../Color/Color";
@@ -46,7 +46,7 @@ import {Logging} from "../Utils/logging";
 import {Application, SessionEvent} from "../Application/Application";
 import {ViewStyle} from "../View/ViewStyle";
 
-export class CollectionView extends View {
+export class CollectionView extends View implements DataSourceBind {
     className: String =  "CollectionView";
     dataSource?: DataSource;
     delegate?: CollectionViewDelegate = undefined;
@@ -67,12 +67,12 @@ export class CollectionView extends View {
         super();
     }
 
-
+    bindDataSourceUpdated(ds: DataSource) {
+        this.reloadData();
+    }
 
     bindDataSource(ds: DataSource) {
-        "use strict";
         this.dataSource = ds;
-        ds.bindViews.push(this);
     }
 
 
@@ -183,8 +183,7 @@ export class CollectionView extends View {
             return;
         }
 
-        // how many items do we have to show?
-        const count = this.dataSource!.numberOfItems();
+
         //let currentRow = 0;
         //let currentCol = 0;
         let currentGroup = "";
@@ -309,18 +308,22 @@ export class CollectionView extends View {
         }
 
 
-        for (let idx = 0; idx < count; idx++) {
-            // default width of cell
 
+
+        let idx = -1;
+        this.dataSource.scanStart();
+        while (this.dataSource.eof() === false) {
+            idx++;
+            // default width of cell
             let newGroup = false;
 
             if (this.groupBy) {
                 if (currentGroup === "") {
-                    currentGroup = this.dataSource.groupByForSortedIndex(idx);
+                    currentGroup = this.dataSource.valueForGroupBy();
                     newGroup = true;
                 }
                 else {
-                    let snewGroup = this.dataSource.groupByForSortedIndex(idx);
+                    let snewGroup = this.dataSource.valueForGroupBy();
                     if (currentGroup !== snewGroup) {
                         currentGroup = snewGroup;
                         newGroup = true;
@@ -403,7 +406,7 @@ export class CollectionView extends View {
 
 
             let itemObj: CollectionItem = {
-                obj: this.dataSource.objectForSortedIndex(idx),
+                obj: this.dataSource.getRow(),
                 cell: cell,
                 upperPosition: startY,
                 bottomPosition: startY + height,
@@ -477,7 +480,7 @@ export class CollectionView extends View {
                     //currentRow = 0;
                 }
             }
-
+            this.dataSource.scanNext();
         }
 
 

@@ -11,7 +11,6 @@ export interface TreeLeaf {
     object?: any;
     index: number;
     depth: number;
-    isExpanded: boolean;
     isSelected: boolean;
     children: TreeLeaf[];
     childrenDropTargets?: View[];

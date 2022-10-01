@@ -37,8 +37,6 @@ const resource_caretright = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\
 
 
 
-
-
 export class TreeView extends View implements TreeViewDelegate {
     // object which will receive treeView* events
     delegate?: TreeViewDelegate;
@@ -56,6 +54,8 @@ export class TreeView extends View implements TreeViewDelegate {
 
 
     hoverRows: boolean = false;
+
+    expandedLeaves: string[] = [];
 
     // internal object storing leaf states
     leaves: TreeLeaf[] = [];
@@ -475,7 +475,7 @@ export class TreeView extends View implements TreeViewDelegate {
                     }
                 }
                 var img = "";
-                if (currentLeaf.isExpanded) {
+                if (this.isLeafExpanded(currentLeaf.id)) {
                     img = Base64.encode(resource_caretdown.replace("currentColor", color));
                 } else {
                     img = Base64.encode(resource_caretright.replace("currentColor", color));
@@ -520,13 +520,11 @@ export class TreeView extends View implements TreeViewDelegate {
             }
             currentLeaf.onToggle = function () {
                 let self = <TreeLeaf>this;
-                self.isExpanded = !self.isExpanded;
-                if (self.isExpanded) {
+                if (!self.treeViewRef.isLeafExpanded(self.id)) {
                     self.treeViewRef.expandNode(self);
                 } else {
                     self.treeViewRef.collapseNode(self);
                 }
-
 
             };
             expCell.setClickDelegate(currentLeaf, "onToggle");
@@ -662,7 +660,7 @@ export class TreeView extends View implements TreeViewDelegate {
         }
 
         if (isDefined(parentLeaf)) {
-            if (parentLeaf.isExpanded === false) {
+            if (this.isLeafExpanded(parentLeaf.id) === false) {
                 cell.setVisible(false);
             }
         }
@@ -675,7 +673,8 @@ export class TreeView extends View implements TreeViewDelegate {
     }
 
     collapseNode(leaf: TreeLeaf) {
-        leaf.isExpanded = false;
+
+        this.removeLeafFromExpandedList(leaf.id);
         if (leaf.expandCollapseImage) {
             let color = "";
             let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -685,11 +684,8 @@ export class TreeView extends View implements TreeViewDelegate {
                 }
             }
             var img = "";
-            if (leaf.isExpanded) {
-                img = Base64.encode(resource_caretdown.replace("currentColor", color));
-            } else {
-                img = Base64.encode(resource_caretright.replace("currentColor", color));
-            }
+            img = Base64.encode(resource_caretright.replace("currentColor", color));
+
             leaf.expandCollapseImage.setImageURI("data:image/svg+xml;base64," + img)
 
         }
@@ -706,8 +702,25 @@ export class TreeView extends View implements TreeViewDelegate {
         }
     }
 
+    private addLeafToExpandedList(leafId: string) {
+        let exists = this.expandedLeaves.find((s) => { return s === leafId;});
+        if (exists === undefined) {
+            this.expandedLeaves.push(leafId);
+        }
+    }
+    private removeLeafFromExpandedList(leafId: string) {
+        let idx = this.expandedLeaves.findIndex((s) => { return s === leafId;});
+        if (idx > -1) {
+            this.expandedLeaves.splice(idx, 1);
+        }
+    }
+    private isLeafExpanded(leafId: string) {
+        return this.expandedLeaves.findIndex((s) => { return s === leafId;}) > -1;
+    }
+
     expandNode(leaf: TreeLeaf) {
-        leaf.isExpanded = true;
+
+        this.addLeafToExpandedList(leaf.id);
         if (leaf.expandCollapseImage) {
             let color = "";
             let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -717,11 +730,8 @@ export class TreeView extends View implements TreeViewDelegate {
                 }
             }
             var img = "";
-            if (leaf.isExpanded) {
-                img = Base64.encode(resource_caretdown.replace("currentColor", color));
-            } else {
-                img = Base64.encode(resource_caretright.replace("currentColor", color));
-            }
+            img = Base64.encode(resource_caretdown.replace("currentColor", color));
+
             leaf.expandCollapseImage.setImageURI("data:image/svg+xml;base64," + img)
         }
         for (let i = 0; i < leaf.children.length; i += 1) {
@@ -729,7 +739,8 @@ export class TreeView extends View implements TreeViewDelegate {
             if (subLeaf.cellRef) {
                 subLeaf.cellRef.setVisible(true);
             }
-            if (subLeaf.isExpanded === false) {
+            /*
+            if (this.isLeafExpanded(subLeaf.id) === false) {
                 if (subLeaf.expandCollapseImage) {
                     let color = "";
                     let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -739,7 +750,7 @@ export class TreeView extends View implements TreeViewDelegate {
                         }
                     }
                     var img = "";
-                    if (leaf.isExpanded) {
+                    if (this.isLeafExpanded(leaf.id)) {
                         img = Base64.encode(resource_caretdown.replace("currentColor", color));
                     } else {
                         img = Base64.encode(resource_caretright.replace("currentColor", color));
@@ -750,6 +761,8 @@ export class TreeView extends View implements TreeViewDelegate {
                 this.expandNode(subLeaf);
 
             }
+
+             */
         }
     }
     expandAllNodes() {
@@ -785,7 +798,7 @@ export class TreeView extends View implements TreeViewDelegate {
                 leaf.cellRef!.setPropertyValue("cell.isSelected", false);
             }
 
-            leaf.isExpanded = true;
+            this.expandNode(leaf);
             if (leaf.expandCollapseImage) {
                 let color = "";
                 let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -795,11 +808,7 @@ export class TreeView extends View implements TreeViewDelegate {
                     }
                 }
                 var img = "";
-                if (leaf.isExpanded) {
-                    img = Base64.encode(resource_caretdown.replace("currentColor", color));
-                } else {
-                    img = Base64.encode(resource_caretright.replace("currentColor", color));
-                }
+                img = Base64.encode(resource_caretdown.replace("currentColor", color));
                 leaf.expandCollapseImage.setImageURI("data:image/svg+xml;base64," + img)
 
             }
@@ -816,7 +825,7 @@ export class TreeView extends View implements TreeViewDelegate {
         for (let i = 0; i < leaf.children.length; i++) {
             let ret = this._setSelectedRecur(leaf.children[i], id, isSelected);
             if (ret) {
-                leaf.isExpanded = true;
+
                 if (leaf.expandCollapseImage) {
                     let color = "";
                     let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -826,7 +835,7 @@ export class TreeView extends View implements TreeViewDelegate {
                         }
                     }
                     var img = "";
-                    if (leaf.isExpanded) {
+                    if (this.isLeafExpanded(leaf.id)) {
                         img = Base64.encode(resource_caretdown.replace("currentColor", color));
                     } else {
                         img = Base64.encode(resource_caretright.replace("currentColor", color));
@@ -873,7 +882,6 @@ export class TreeView extends View implements TreeViewDelegate {
         for (let i = 0; i < leaf.children.length; i++) {
             ret = this._setSelectedBatchRecur(leaf.children[i], array);
             if (ret) {
-                leaf.isExpanded = true;
                 if (leaf.expandCollapseImage) {
                     let color = "";
                     let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -883,7 +891,7 @@ export class TreeView extends View implements TreeViewDelegate {
                         }
                     }
                     var img = "";
-                    if (leaf.isExpanded) {
+                    if (this.isLeafExpanded(leaf.id)) {
                         img = Base64.encode(resource_caretdown.replace("currentColor", color));
                     } else {
                         img = Base64.encode(resource_caretright.replace("currentColor", color));
@@ -906,7 +914,6 @@ export class TreeView extends View implements TreeViewDelegate {
         for (let i = 0; i < this.leaves.length; i++) {
             let ret = this._setSelectedBatchRecur(this.leaves[i], array);
             if (ret) {
-                this.leaves[i].isExpanded = true;
 
                 let color = "";
                 let styles = this.getStylesForTargetId("expandCollapseIcon");
@@ -916,7 +923,7 @@ export class TreeView extends View implements TreeViewDelegate {
                     }
                 }
                 var img = "";
-                if (this.leaves[i].isExpanded) {
+                if (this.isLeafExpanded(this.leaves[i].id)) {
                     img = Base64.encode(resource_caretdown.replace("currentColor", color));
                 } else {
                     img = Base64.encode(resource_caretright.replace("currentColor", color));
@@ -1086,7 +1093,6 @@ export class TreeView extends View implements TreeViewDelegate {
                 object: this.dataArray[i],
                 index: i,
                 depth: 0,
-                isExpanded: false,
                 isSelected: false,
                 children: [],
                 childrenDropTargets: [],
@@ -1132,7 +1138,6 @@ export class TreeView extends View implements TreeViewDelegate {
                 object: children[i],
                 index: i,
                 depth: depth+1,
-                isExpanded: false,
                 isSelected: false,
                 children: [],
                 childrenDropTargets: [],

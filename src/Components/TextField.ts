@@ -4,7 +4,7 @@ import {ViewStyle} from "../View/ViewStyle";
 import {NUConvertToPixel, px} from "../NumberWithUnit/NumberWithUnit";
 import {Fill} from "../View/Fill";
 import {Border} from "../View/Border";
-import {DataSource} from "../Datasource/DataSource";
+import {DataSource} from "../Datasource/DS";
 import {Application, SessionEvent} from "../Application/Application";
 import {Bounds} from "../Bounds/Bounds";
 import {boundsWithPixels} from "../Bounds/boundsWithPixels";
@@ -15,6 +15,7 @@ import {isDefined} from "../Utils/isDefined";
 import {DataRequest} from "../Datasource/DataRequest";
 import {renderTextStyleProps} from "../TextStyle/renderTextStyleProps";
 import {BorderSide} from "../View/BorderSide";
+import {DSJSONAdaptor} from "../Datasource/DSJSONAdaptor";
 
 
 declare class TableViewPager extends View {};
@@ -225,7 +226,7 @@ export class TextField extends View {
 
     textViewAutoCompleteDataSource(textView: TextField): DataSource {
         "use strict";
-        return new DataSource();
+        return new DataSource(new DSJSONAdaptor([]));
     }
 
     textViewAutoCompleteCell(textView: TextField, cell: View, index: number) {
@@ -834,7 +835,8 @@ export class TextField extends View {
 
 
     onFocusGained () {
-
+        (this as View).setPropertyValue("view.focused", true);
+        this.processStyleAndRender("", []);
 
         if (this.shouldDisplayAutoComplete) {
             if (!this.autoCompletePane) {
@@ -891,6 +893,10 @@ export class TextField extends View {
     }
 
     forceFocusLoss () {
+
+        (this as View).setPropertyValue("view.focused", false);
+        this.processStyleAndRender("", []);
+
         if (this.autoCompletePane) {
 
             const ptr = this;

@@ -1,7 +1,7 @@
 import {View} from "../View/View";
 import {ListViewDelegate} from "./ListViewDelegate";
 import {ListItem} from "./ListItem";
-import {DataSource} from "../Datasource/DataSource";
+import {DataSource, DataSourceBind} from "../Datasource/DS";
 import {SelectionMode} from "./SelectionMode";
 import {Direction} from "./Direction";
 import {Color} from "../Color/Color";
@@ -16,9 +16,10 @@ import {isDefined} from "../Utils/isDefined";
 import {boundsWithPixels} from "../Bounds/boundsWithPixels";
 import {Label} from "../Components/Label";
 import {ViewStyle} from "../View/ViewStyle";
+import {DSJSONAdaptor} from "../Datasource/DSJSONAdaptor";
 
 
-export class ListView  extends View implements ListViewDelegate {
+export class ListView  extends View implements ListViewDelegate, DataSourceBind {
 
     readonly className: string = "ListView";
 
@@ -71,10 +72,12 @@ export class ListView  extends View implements ListViewDelegate {
     }
 
     bindDataSource(ds: DataSource) {
-        "use strict";
         this.dataSource = ds;
-        ds.bindViews.push(this);
     }
+    bindDataSourceUpdated(ds: DataSource) {
+        this.reloadData();
+    }
+
 
     viewWasAttached() {
         super.viewWasAttached();
@@ -1199,7 +1202,7 @@ export class ListView  extends View implements ListViewDelegate {
         this.getDiv().ViewCtrl = this;
 
         this.items = [];
-        this.dataSource = new DataSource();
+        this.dataSource = new DataSource(new DSJSONAdaptor([]));
 
         if (this.delegate === undefined) {
             this.delegate = this;

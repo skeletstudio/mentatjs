@@ -1,6 +1,6 @@
 import {fillParentBounds, View} from "../View/View";
 import {TableViewDelegate} from "./TableViewDelegate";
-import {DataSource} from "../Datasource/DataSource";
+import {DataSource, DataSourceBind} from "../Datasource/DS";
 import {SelectionMode} from "./SelectionMode";
 import {Color} from "../Color/Color";
 import {CheckBox} from "../Components/CheckBox";
@@ -22,7 +22,7 @@ import {BorderSide} from "../View/BorderSide";
 import {Btn} from "../Components/Btn";
 
 
-export class TableView extends View implements TableViewDelegate {
+export class TableView extends View implements TableViewDelegate, DataSourceBind {
 
     readonly className: string = "MentatJS.TableView";
 
@@ -160,9 +160,9 @@ export class TableView extends View implements TableViewDelegate {
 
     bindDataSource(ds: DataSource) {
         this.dataSource = ds;
-        if (isDefined(ds)) {
-            ds.bindViews.push(this);
-        }
+    }
+    bindDataSourceUpdated(ds: DataSource) {
+        this.reloadData();
     }
 
     setDelegate(_delegate: any) {
@@ -333,12 +333,7 @@ export class TableView extends View implements TableViewDelegate {
     }
 
     tableViewCellForPath(tableView: TableView, cell: View, path: {row: number, col: number}) {
-        "use strict";
-        let item = undefined;
-        if (isDefined(tableView.dataSource)) {
-            item = tableView.dataSource!.objectForSortedIndex(path.row);
-        }
-
+        const item = tableView.dataSource.getRow();
         if (path.col === 0 && this.showSelectionCheckbox) {
             let chk = new CheckBox();
             chk.boundsForView = function (parentBounds: Bounds): Bounds {
@@ -388,25 +383,16 @@ export class TableView extends View implements TableViewDelegate {
                             //v = new win[col.defaultCell]();
                             if (this.delegate && this.delegate.tableViewControlCellForPath) {
                                 v = this.delegate.tableViewControlCellForPath(this, col, idx);
-
-
                             } else {
-
                                 eval("v = new " + col.defaultCell + "();");
                             }
                         }
                         if (Logging.enableLogging) {
                             console.log("instantiating " + col.defaultCell + " for column " + col.id);
                         }
-                        //if (this.isLayoutEditor === true) {
-                        //    console.warn("tableView overrided function not loaded in layoutEditor mode")
-
-                        //} else {
 
                         v.id = generateV4UUID();
-                        //}
                         v.keyValues["column_id"] = col.id;
-
                         v.boundsForView = function (parentBounds: Bounds): Bounds {
                             if (isDefined(this.keyValues["defaultSize"])) {
                                 return boundsWithPixels({
@@ -446,10 +432,10 @@ export class TableView extends View implements TableViewDelegate {
                         }
                         if (col.defaultCell === 'Checkbox' || col.defaultCell === "MentatJS.Checkbox") {
                             if (col.field !== undefined) {
-                                if (isDefined(item)) {
-                                    (v as CheckBox).checked = item[col.field] === true;
+                                if (isDefined(this.dataSource.getRow())) {
+                                    (v as CheckBox).checked = this.dataSource.valueForKey(col.field) === true;
                                     v.setActionDelegate({
-                                        item: item,
+                                        item: this.dataSource.getRow(),
                                         field: col.field,
                                         onClick: function (sender: CheckBox) {
                                             this.item[this.field] = !this.item[this.field];
@@ -461,7 +447,7 @@ export class TableView extends View implements TableViewDelegate {
                         if (col.defaultCell === "Button" || col.defaultCell === "MentatJS.Button") {
                             if (col.field !== undefined && col.field !== "") {
                                 if (isDefined(item)) {
-                                    (v as Btn).text = item[col.field];
+                                    (v as Btn).text = tableView.dataSource.valueForKey(col.field);
                                 }
                             }
                         }
@@ -473,7 +459,7 @@ export class TableView extends View implements TableViewDelegate {
                             v.extracss = "overflow: hidden;text-overflow: ellipsis;pointer-events:none;";
                             if (col.field !== undefined && col.field !== "") {
                                 if (isDefined(item)) {
-                                    (v as Label).text = item[col.field];
+                                    (v as Label).text = tableView.dataSource.valueForKey(col.field);
                                 }
                             }
                             if (isDefined(col.functions)) {
@@ -507,9 +493,6 @@ export class TableView extends View implements TableViewDelegate {
                         }
 
                         return;
-                        //} catch (exception) {
-                        //    console.warn(exception.message);
-                        //}
                     }
                 }
             }
@@ -1128,8 +1111,8 @@ export class TableView extends View implements TableViewDelegate {
             y = 0,
             cellStartX = 0,
             cellStartY = 0;
-        const nbCols = (this.delegate!.tableViewNumberOfColumns === undefined) ? this.tableViewNumberOfColumns(this) : this.delegate!.tableViewNumberOfColumns(this),
-            nbRows = (this.delegate!.tableViewNumberOfRows === undefined) ? this.tableViewNumberOfRows(this) : this.delegate!.tableViewNumberOfRows(this);
+        const nbCols = (this.delegate!.tableViewNumberOfColumns === undefined) ? this.tableViewNumberOfColumns(this) : this.delegate!.tableViewNumberOfColumns(this)
+            //nbRows = (this.delegate!.tableViewNumberOfRows === undefined) ? this.tableViewNumberOfRows(this) : this.delegate!.tableViewNumberOfRows(this);
 
         this.prepareDrawCells();
 
@@ -1140,6 +1123,9 @@ export class TableView extends View implements TableViewDelegate {
 
         const aDrawCells = performance.now();
 
+        if (this.dataSource === undefined) {
+            return;
+        }
 
         let rowWidth = 0;
         for (x = 0; x < nbCols; x += 1) {
@@ -1151,15 +1137,17 @@ export class TableView extends View implements TableViewDelegate {
             }
         }
 
-
-        for ( y = 0; y < nbRows; y++ ) {
+        this.dataSource.scanStart();
+        y = -1;
+        while (!this.dataSource.eof()) {
+            y++;
             const rowHeight = (this.delegate!.tableViewHeightForRow === undefined) ? this.tableViewHeightForRow(this, y) : this.delegate!.tableViewHeightForRow(this, y);
 
             cellStartX = 0;
 
             let obj = undefined;
             if (isDefined(this.dataSource)) {
-                obj = this.dataSource!.objectForSortedIndex(y);
+                obj = this.dataSource!.getRow();
                 if (isDefined(obj)) {
                     if (isDefined(obj.isTableBreak)) {
                         if (obj.isTableBreak === true) {
@@ -1207,6 +1195,7 @@ export class TableView extends View implements TableViewDelegate {
 
                             }
                             // go to next row
+                            this.dataSource.scanNext();
                             continue;
                         }
                     }
@@ -1259,21 +1248,11 @@ export class TableView extends View implements TableViewDelegate {
                 value: isSelected
             })
 
-
-            // console.log(`(tableView) row ${y}`, rowCell.styles, rowCell.properties);
-
             if (this.separateRows) {
                 // rowCell.extracss = "border-bottom: 1px solid rgb(232, 232, 232);";
             }
-
-
-
             rowCell.initView(this.id + ".row[" + y + "]");
             this.viewContent.attach(rowCell);
-
-
-
-
 
             for ( x = 0; x < nbCols; x++) {
 
@@ -1287,7 +1266,6 @@ export class TableView extends View implements TableViewDelegate {
                 cell.keyValues["row"] = y;
                 cell.keyValues["col"] = x;
                 cell.keyValues["rowCell"] = rowCell;
-
 
                 cell.boundsForView = function (parentBounds: Bounds): Bounds {
                     return boundsWithPixels({
@@ -1308,8 +1286,6 @@ export class TableView extends View implements TableViewDelegate {
                         }
                     }
                 };
-
-
 
                 cell.initView(this.id + ".cell[" + y + "][" + x + "]");
 
@@ -1344,7 +1320,7 @@ export class TableView extends View implements TableViewDelegate {
 
 
             }
-
+            this.dataSource.scanNext();
         }
 
         // add row ?

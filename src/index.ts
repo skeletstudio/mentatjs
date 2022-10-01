@@ -137,8 +137,12 @@ export * from "./Containers/TreeViewDelegate";
 
 
 export * from "./Datasource/DataRequest";
-export * from "./Datasource/DataSource";
+export * from "./Datasource/DS";
 export * from "./Datasource/DataSourceDelegate";
+export * from "./Datasource/DSAdaptor";
+export * from "./Datasource/DSJSONAdaptor";
+export * from "./Datasource/DSPagedAdaptor";
+export * from "./Datasource/DSRestQueryAdaptor"
 export * from "./Datasource/download";
 export * from "./Guards/instanceOfAnchors";
 export * from "./Guards/instanceOfBorder";

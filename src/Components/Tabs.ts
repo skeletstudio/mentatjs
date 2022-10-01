@@ -15,7 +15,7 @@ import {kViewProperties} from "../View/kViewProperties";
 
 export class Tabs extends View {
 
-    dataSource?: {id: string, text: string, width?: number}[];
+    dataSource?: {id: string, text: string, width?: number, closable: boolean}[];
     direction: Direction = Direction.horizontal;
 
 
@@ -24,6 +24,8 @@ export class Tabs extends View {
 
     left: Btn;
     right: Btn;
+
+    tabWillClosed: (sender: Tabs, id: string, closeTab: (id: string) => void) => void;
 
 
     private tabOffset: number = 0;
@@ -103,11 +105,14 @@ export class Tabs extends View {
 
     _onClick(sender: any) {
         this.selectedId = sender.id;
+
         this.render();
         if (isDefined(this.actionDelegate) && isDefined(this.actionDelegateEventName) && isDefined(this.actionDelegate[this.actionDelegateEventName])) {
             this.actionDelegate[this.actionDelegateEventName](this, sender.id);
         }
     }
+
+
 
     render(parentBounds?: Bounds, style?: ViewStyle) {
         super.render(parentBounds, style)
@@ -127,10 +132,11 @@ export class Tabs extends View {
         this.attach(container);
 
         this.right = new Btn();
+        this.right.styles = this.getStylesForTargetId("btnRight", true);
         this.right.boundsForView = function (parentBounds) {
             return new Bounds(NUConvertToPixel(parentBounds.width).amount - NUConvertToPixel(parentBounds.height).amount, 0, NUConvertToPixel(parentBounds.height).amount, NUConvertToPixel(parentBounds.height).amount);
         }
-        this.right.fontFamily = 'FontAwesome5ProSolid';
+        this.right.fontFamily = 'FontAwesome5FreeSolid';
         this.right.text = "&#xf0da;";
         this.right.initView(generateV4UUID());
         this.attach(this.right);
@@ -138,10 +144,11 @@ export class Tabs extends View {
 
 
         this.left = new Btn();
+        this.left.styles = this.getStylesForTargetId("btnLeft", true);
         this.left.boundsForView = function (parentBounds) {
-            return new Bounds(NUConvertToPixel(parentBounds.width).amount - (NUConvertToPixel(parentBounds.height).amount * 2), 0, NUConvertToPixel(parentBounds.height).amount, NUConvertToPixel(parentBounds.height).amount);
+            return new Bounds(NUConvertToPixel(parentBounds.width).amount - (NUConvertToPixel(parentBounds.height).amount * 2) - 5, 0, NUConvertToPixel(parentBounds.height).amount, NUConvertToPixel(parentBounds.height).amount);
         }
-        this.left.fontFamily = 'FontAwesome5ProSolid';
+        this.left.fontFamily = 'FontAwesome5FreeSolid';
         this.left.text = "&#xf0d9;";
         this.left.initView(generateV4UUID());
         this.attach(this.left);
@@ -199,6 +206,68 @@ export class Tabs extends View {
             v.initView(o.id);
             container.attach(v);
             v.setClickDelegate(this, "_onClick");
+
+            if (o.closable === true && this.dataSource[i].id === this.selectedId) {
+                let close = new Btn();
+                close.keyValues["id"] = o.id;
+                close.keyValues["index"] = i;
+                close.keyValues["x"] = x;
+                close.keyValues["width"] = width;
+                close.boundsForView = function (parentBounds: Bounds): Bounds {
+                    return {
+                        kind: "Bounds",
+                        x: px(this.keyValues["x"]  + this.keyValues["width"] - 25),
+                        y: px(NUConvertToPixel(parentBounds.height).amount / 2 - 10),
+                        width: px(20),
+                        height: px(20),
+                        unit: 'px',
+                        position: "absolute",
+                        rotation: new NumberWithUnit(0, "deg"),
+                        elevation: new NumberWithUnit(0, "auto")
+                    };
+                };
+                //v.fillLineHeight = true;
+                close.styles = this.getStylesForTargetId("btnClose", true);
+                close.text = "X";
+                //v.getDefaultStyle().userSelect = "none";
+                //v.getDefaultStyle().cursor = "pointer";
+                //v.textAlignment = 'center';
+
+                close.initView(o.id + "_close");
+                container.attach(close);
+                close.setClickDelegate({
+                    _onClickCloseTab: (sender) => {
+                        const id = sender.keyValues["id"];
+                        if (this.tabWillClosed !== undefined) {
+                            this.tabWillClosed(this, id, (id: string) => {
+                                let idx = -1;
+                                for (let i = 0; i < this.dataSource.length; i++) {
+                                    if (this.dataSource[i].id === id) {
+                                        idx = i;
+                                        break;
+                                    }
+                                }
+                                if (idx > -1) {
+                                    this.dataSource.splice(i, 1);
+                                }
+                                this.selectedId = "";
+                                if (this.dataSource.length > 0 && i - 1 >= 0 && this.dataSource.length > i - 1) {
+                                    this.selectedId = this.dataSource[i-1].id;
+                                } else if (this.dataSource.length > 0 ) {
+                                    this.selectedId = this.dataSource[0].id;
+                                }
+
+                                this.render();
+                                if (isDefined(this.actionDelegate) && isDefined(this.actionDelegateEventName) && isDefined(this.actionDelegate[this.actionDelegateEventName])) {
+                                    this.actionDelegate[this.actionDelegateEventName](this, this.selectedId);
+                                }
+
+
+                            } );
+                        }
+                    }
+                }, "_onClickCloseTab");
+            }
 
             x = x + width;
 

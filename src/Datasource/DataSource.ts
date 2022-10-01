@@ -1,4 +1,4 @@
-
+/*
 import {downloadDataWithDelegate, postDataWithDelegate} from "./download";
 import {DataSourceDelegate} from "./DataSourceDelegate";
 import {View} from "../View/View";
@@ -10,10 +10,12 @@ import {generateV4UUID} from "../Utils/generateV4UUID";
 import {isDefined} from "../Utils/isDefined";
 
 
+ */
 
 
+/*
 
-export class DataSource extends View implements DataSourceDelegate {
+export class DataSourceOLD extends View implements DataSourceDelegate {
     id: string = '';
     dataSourceID: string =  '';
     dataString : string = '';
@@ -21,6 +23,9 @@ export class DataSource extends View implements DataSourceDelegate {
     sortedData: { ptrArray: any[], index: number }[] = [];
     dataLastUpdated: number = 0;
 
+    paged: boolean = false;
+    limit: number = 50;
+    offset: number = 0;
 
     dataSourceType: string = "MentatJS.DataSource";
 
@@ -28,14 +33,11 @@ export class DataSource extends View implements DataSourceDelegate {
     last_request_id: string = '';
     lastRequest?: any = undefined;
     currentRequest?: any = undefined;
-    limit: number = 50;
-    offset: number = 0;
+
     order_by: string = "ID ASC";
     bindViews: any[] = [];
     totalCount: number = 0;
-
     shouldBind: boolean = false;
-
     countNestedEntries: boolean = false;
 
 
@@ -236,17 +238,7 @@ export class DataSource extends View implements DataSourceDelegate {
         return "";
     }
 
-    /*
 
-        request = {
-            id: "",
-            last_request_id: "",
-            limit: 20,
-            offset: 0,
-            order_by: ""
-        };
-
-     */
 
     dataSourceMethodForRequest(dataSource: DataSource, request: DataRequest): string {
         "use strict";
@@ -388,7 +380,10 @@ export class DataSource extends View implements DataSourceDelegate {
     objectForSortedIndex(index: number): any {
         if (index<0) return undefined;
         if (index>= this.sortedData.length) return undefined;
-
+        if (this.paged === true) {
+            index = this.offset + index;
+            if (index>= this.sortedData.length) return undefined;
+        }
         let entry: {ptrArray: any[], index: number} = this.sortedData[index];
         if (entry.index <0) return undefined;
         if (entry.index > entry.ptrArray.length) return undefined;
@@ -444,7 +439,15 @@ export class DataSource extends View implements DataSourceDelegate {
 
 
     numberOfItems(): number {
-        return this.sortedData.length;
+        if (this.paged === true) {
+            let dif = this.sortedData.length - this.offset;
+            if (dif > this.limit) {
+                dif = this.limit;
+            }
+            return dif;
+        } else {
+            return this.sortedData.length;
+        }
     }
 
     filterForObject(item: any): boolean {
@@ -492,15 +495,15 @@ export class DataSource extends View implements DataSourceDelegate {
 
 
     reindex() {
-
+        let newTotal = 0;
         this.sortedData = [];
-
 
         function recur_(ds: DataSource, base) {
             for (let i = 0; i < base.length; i++ ) {
                 //this.mainData[i].uniqueintid = i;
                 if (ds.filterForObject(base[i])) {
                     ds.sortedData.push({ptrArray: base, index: i});
+                    newTotal++;
                 }
                 if (ds.countNestedEntries === true) {
                     if (isDefined(ds.dataSourceNestedEntriesForPath)) {
@@ -532,7 +535,7 @@ export class DataSource extends View implements DataSourceDelegate {
 
         });
 
-
+        this.totalCount = newTotal;
 
     }
 
@@ -563,3 +566,6 @@ export class DataSource extends View implements DataSourceDelegate {
 
 
 }
+
+
+ */

@@ -11,6 +11,7 @@ import {PropertyTextStyle} from "../TextStyle/PropertyTextStyle";
 export class ViewStyle {
     kind: string = "ViewStyle";
     id?: string;
+    subViewId?: string;
     state?: string;
     cond?: ViewStyleCondition[] = []
     children? : ViewStyle[];

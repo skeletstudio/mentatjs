@@ -536,6 +536,67 @@ export class View extends BaseClass {
         }
     }
 
+    getStylesForSubViewId(subViewId: string, copyAndRemoveId: boolean = false, conditions: ViewStyleCondition[] = []): ViewStyle[] {
+        let styles: ViewStyle[] = [];
+        let search_recur = (s: ViewStyle) => {
+            if (s.subViewId === subViewId) {
+                return s;
+            }
+
+            if (isDefined(s.children)) {
+                for (let i = 0; i < s.children.length; i += 1) {
+                    let ret = search_recur(s.children[i]);
+                    if (isDefined(ret)) {
+                        return ret;
+                    }
+                }
+            }
+            return undefined;
+        }
+
+        for (let i = 0; i < this.styles.length; i += 1) {
+            let ret = search_recur(this.styles[i]);
+            if (isDefined(ret)) {
+                styles.push(ret);
+            }
+        }
+        if (copyAndRemoveId === true) {
+            let temp: ViewStyle[] = JSON.parse(JSON.stringify(styles));
+            for (let i = 0; i < temp.length; i += 1) {
+                temp[i].subViewId = undefined;
+            }
+            styles = temp;
+        }
+
+        if (conditions.length > 0) {
+            for (let i = styles.length - 1; i >= 0; i--) {
+                let matches: boolean = true;
+                for (let j = 0; j < conditions.length; j += 1) {
+                    let cond_property = conditions[j].property;
+                    let cond_op = conditions[j].op;
+                    let cond_value = conditions[j].value;
+                    if (!isDefined(styles[i].cond)) {
+                        matches = false;
+                    } else {
+                        let scond = styles[i].cond.find((elem) => {
+                            return elem.property === cond_property;
+                        })
+                        if (cond_property !== scond.property || cond_op !== scond.op || cond_value !== scond.value) {
+                            matches = false;
+                        }
+                    }
+                }
+                if (matches === false) {
+                    conditions.splice(i, 1);
+                }
+            }
+
+
+        }
+
+        return styles;
+    }
+
     getStylesForTargetId(id: string, copyAndRemoveId: boolean = false, conditions: ViewStyleCondition[] = []): ViewStyle[] {
         let styles: ViewStyle[] = [];
         let search_recur = (s: ViewStyle) => {
@@ -645,6 +706,9 @@ export class View extends BaseClass {
         for (let i = 0; i < this.styles.length; i += 1) {
             let vs = this.styles[i];
             if (isDefined(vs.id) && vs.id !== "self" && vs.id !== this.id) {
+                continue;
+            }
+            if (isDefined(vs.subViewId)) {
                 continue;
             }
             if (isDefined(vs.state) && vs.state !== "default" && vs.state !== this.currentState) {
@@ -793,6 +857,9 @@ export class View extends BaseClass {
 
         // separate styles for this view and its children
         for (let i = 0; i < allStyles.length; i += 1) {
+            if (allStyles[i].style !== undefined && allStyles[i].style.subViewId !== undefined) {
+                continue;
+            }
             if (allStyles[i].target === this.id) {
                 myStyles.push(allStyles[i].style);
             } else {
