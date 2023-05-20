@@ -46,10 +46,12 @@ export class Slider extends View {
 
 
     viewWillBeDeattached() {
-        this._div.removeChild(this._input);
-        this._input.viewRef = undefined;
-        this._input.oninput = undefined;
-        this._input = undefined;
+        if (this._input !== undefined) {
+            this._input.parentNode.removeChild(this._input);
+            this._input.viewRef = undefined;
+            this._input.oninput = undefined;
+            this._input = undefined;
+        }
     }
 
     viewWasAttached() {

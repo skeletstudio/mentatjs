@@ -11,7 +11,7 @@ module.exports = {
         library: 'mentatjs'
     },
     optimization: {
-        minimize: true
+        minimize: false
     },
 
 };
