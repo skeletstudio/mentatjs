@@ -56,11 +56,9 @@ export class Application extends BaseClass {
     }
 
     static get instance(): Application {
-        // @ts-ignore
+
         if (isDefined(global)) {
-            // @ts-ignore
             if (isDefined(global["Application"])) {
-                // @ts-ignore
                 return global["Application"];
             } else {
                 return Application._instance;
@@ -96,7 +94,7 @@ export class Application extends BaseClass {
 
     // Main root View
     // access anywhere with MentatJS.Application.instance.rootView
-    rootView?: View;
+    rootView: View;
 
     // Array of View/ViewControllers being downloaded by the Navigation Controller and Cache of View/ViewControllers definitions
     downloadStack : any;

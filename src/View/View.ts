@@ -2842,12 +2842,12 @@ function divMove(e: MouseEvent) {
 
 
 
-export function fillParentBounds (parentBounds: Bounds): Bounds {
+export function fillParentBounds (parentBounds: Bounds, paddingInPixels: number = 0): Bounds {
     return new Bounds(
-        0,
-        0,
-        parentBounds.width.amount!,
-        parentBounds.height.amount!
+        paddingInPixels,
+        paddingInPixels,
+        parentBounds.width.amount! - (paddingInPixels * 2),
+        parentBounds.height.amount! - (paddingInPixels * 2)
     );
 }
 
